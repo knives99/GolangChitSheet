@@ -15,9 +15,19 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
+
 	//2 設置映射規則 (要駝峰式還是怎樣的拼法)
-	engine.SetMapper(core.SnakeMapper{})
+	engine.SetMapper(core.SnakeMapper{}) // GetSome -> get_some
+	engine.SetMapper(core.SameMapper{})
+	engine.SetMapper(core.GonicMapper{}) //ID -> id not i_d
+
 	engine.ShowSQL(true)
+	engine.Logger().SetLevel(core.LOG_DEBUG) //設定日制級別
+	engine.SetMaxOpenConns(10)               //設置最大連接數
+	engine.SetMaxIdleConns(2)                //最大空閒連接數
+
+	//數據引擎關閉
+	defer engine.Close()
 
 	//3.同步數據庫表格
 	engine.Sync2(new(PersonTable))
@@ -82,6 +92,7 @@ func main() {
 	fmt.Println(personNative)
 
 	//6. 排序條件查詢
+	//desc - 降冪排列
 	var personOrderBy []PersonTable
 	err = engine.OrderBy("person_age desc").Find(&personOrderBy)
 	fmt.Println(personOrderBy)
@@ -111,11 +122,13 @@ func main() {
 	rowNum, err = engine.Id(7).Update(&personInsert)
 	fmt.Println(rowNum)
 
+	//統計功能
+
 	//4.統計 count
 	count, err := engine.Count(new(PersonTable))
 	fmt.Println("personTable表總計路條數", count)
 
-	//7.事務(session)操作 以防多條數據執行時發生錯誤
+	//7.事務(session)操作 以防批量執行時發生錯誤
 	personsArray := []PersonTable{
 		PersonTable{PersonName: "Jave", PersonSex: 1, PersonAge: 28},
 		PersonTable{PersonName: "XX", PersonAge: 27, PersonSex: 0},
@@ -139,9 +152,10 @@ func main() {
 
 }
 
+// Xorm Tag
 type PersonTable struct {
-	Id         int64  `xorm:"pk autoincr"`
-	PersonName string `xorm:"varchar(24)"`
-	PersonAge  int    `xorm:"int default 0"`
-	PersonSex  int    `xorm:"notnull -"`
+	Id         int64  `xorm:"pk autoincr"`   //主鍵 自增
+	PersonName string `xorm:"varchar(24)"`   //可變字符
+	PersonAge  int    `xorm:"int default 0"` //默認值
+	PersonSex  int    `xorm:"notnull -"`     //不能為空 and 不印射該字段
 }

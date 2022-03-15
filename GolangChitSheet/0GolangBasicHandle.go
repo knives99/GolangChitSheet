@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
+	"net/http"
 )
 
 //取得資料
@@ -57,6 +58,7 @@ func HandlePost(ctx *gin.Context) {
 	var register Register
 	err := ctx.ShouldBind(&register)
 	if err != nil {
+
 	}
 
 	//POST- Content-Type == application/json
@@ -75,6 +77,14 @@ func HandleDelete(ctx *gin.Context) {
 	userId := ctx.Param("id")
 	fmt.Println(userId)
 	ctx.Writer.Write([]byte(userId))
+
+	var input struct {
+		ID int64 `uri:"id"`
+	}
+	err := ctx.ShouldBindUri(&input)
+	if err != nil {
+	}
+	ctx.JSON(http.StatusOK, input.ID)
 }
 
 type Student struct {
